@@ -9,13 +9,11 @@ class ViewController: UIViewController {
         UIGraphicsBeginImageContext(size)
         guard let context = UIGraphicsGetCurrentContext() else { return nil }
         
-        for _ in 0..<Int(size.width) {
-            for x in 0..<Int(size.width) {
-                for y in 0..<Int(size.height) {
-                    let gray = CGFloat.random(in: 0...1)
-                    context.setFillColor(UIColor(white: gray, alpha: 0.1).cgColor)
-                    context.fill(CGRect(x: x, y: y, width: 1, height: 1))
-                }
+        for x in 0..<Int(size.width) {
+            for y in 0..<Int(size.height) {
+                let gray = CGFloat.random(in: 0...1)
+                context.setFillColor(UIColor(white: gray, alpha: 0.1).cgColor)
+                context.fill(CGRect(x: x, y: y, width: 1, height: 1))
             }
         }
         
