@@ -94,14 +94,93 @@ class ViewController: UIViewController {
         return label
     }()
     
+    private let followersIcon: UIImageView = {
+        let imageView = UIImageView(image: UIImage(systemName: "person.2"))
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.tintColor = UIColor(white: 0.6, alpha: 1)
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    private let followersLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 0
+        
+        let attributedText = NSMutableAttributedString(string: "98 ", attributes: [
+            .font: UIFont.systemFont(ofSize: 14, weight: .bold),
+            .foregroundColor: UIColor.white
+        ])
+        attributedText.append(NSAttributedString(string: "followers", attributes: [
+            .font: UIFont.systemFont(ofSize: 14, weight: .regular),
+            .foregroundColor: UIColor(white: 0.6, alpha: 1)
+        ]))
+        
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private let followingLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        let attributedText = NSMutableAttributedString(string: "38 ", attributes: [.font: UIFont.systemFont(ofSize: 14, weight: .bold), .foregroundColor: UIColor.white])
+        attributedText.append(NSAttributedString(string: "following", attributes: [.font: UIFont.systemFont(ofSize: 14, weight: .regular), .foregroundColor: UIColor(white: 0.6, alpha: 1)]))
+        
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private let statsStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        return stack
+    }()
+    
+    private let locationIcon: UIImageView = {
+        let imageView = UIImageView(image: UIImage(systemName: "mappin.and.ellipse"))
+        imageView.tintColor = UIColor(white: 0.6, alpha: 1)
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+
+    private let locationLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Ho Chi Minh City, Vietnam"
+        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.textColor = UIColor(white: 0.8, alpha: 1)
+        return label
+    }()
+
+    private let locationStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        return stack
+    }()
+    
     private func setupProfileHeader() {
         contentView.addSubview(profileImageView)
         contentView.addSubview(textStackView)
         contentView.addSubview(followButton)
         contentView.addSubview(bioLabel)
+        contentView.addSubview(statsStackView)
+        contentView.addSubview(locationStackView)
         
         textStackView.addArrangedSubview(nameLabel)
         textStackView.addArrangedSubview(usernameLabel)
+        
+        statsStackView.addArrangedSubview(followersIcon)
+        statsStackView.addArrangedSubview(followersLabel)
+        statsStackView.addArrangedSubview(followingLabel)
+        
+        locationStackView.addArrangedSubview(locationIcon)
+        locationStackView.addArrangedSubview(locationLabel)
         
         NSLayoutConstraint.activate([
             // Pinned cleanly to topLayoutGuide spacing
@@ -122,6 +201,16 @@ class ViewController: UIViewController {
             bioLabel.topAnchor.constraint(equalTo: followButton.bottomAnchor, constant: 20),
             bioLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             bioLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            statsStackView.topAnchor.constraint(equalTo: bioLabel.bottomAnchor, constant: 16),
+            statsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            followersIcon.widthAnchor.constraint(equalToConstant: 16),
+            followersIcon.heightAnchor.constraint(equalToConstant: 16),
+                    
+                    // Location Row Constraints
+            locationStackView.topAnchor.constraint(equalTo: statsStackView.bottomAnchor, constant: 12),
+            locationStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            locationIcon.widthAnchor.constraint(equalToConstant: 16),
+            locationIcon.heightAnchor.constraint(equalToConstant: 16)
         ])
     }
     
