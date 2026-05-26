@@ -164,6 +164,40 @@ class ViewController: UIViewController {
         return stack
     }()
     
+    private let titleArray: Array = ["Overview", "Repositories", "Starred"]
+    
+    private let navigationView: UISegmentedControl = {
+        let view = UISegmentedControl(items: ["Overview", "Repositories", "Starred"])
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .clear
+        view.tintColor = .clear
+        view.selectedSegmentTintColor = UIColor(white: 1, alpha: 0.15)
+        view.selectedSegmentIndex = 0
+        view.setDividerImage(UIImage(), forLeftSegmentState: .normal, rightSegmentState: .normal, barMetrics: .default)
+        
+        let attributedText = [
+            NSAttributedString.Key.foregroundColor: UIColor(white: 0.6, alpha: 1),
+            NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .medium)
+        ]
+        let selectedText = [
+            NSAttributedString.Key.foregroundColor: UIColor.white,
+            NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .semibold)
+        ]
+        
+        view.setTitleTextAttributes(attributedText, for: .normal)
+        view.setTitleTextAttributes(selectedText, for: .selected)
+        return view
+    }()
+    
+    private let navigationTrackView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = UIColor(white: 1, alpha: 0.04)
+        view.layer.cornerRadius = 22
+        view.clipsToBounds = true
+        return view
+    }()
+    
     private func setupProfileHeader() {
         contentView.addSubview(profileImageView)
         contentView.addSubview(textStackView)
@@ -171,6 +205,8 @@ class ViewController: UIViewController {
         contentView.addSubview(bioLabel)
         contentView.addSubview(statsStackView)
         contentView.addSubview(locationStackView)
+        contentView.addSubview(navigationView)
+        contentView.addSubview(navigationTrackView)
         
         textStackView.addArrangedSubview(nameLabel)
         textStackView.addArrangedSubview(usernameLabel)
@@ -181,6 +217,8 @@ class ViewController: UIViewController {
         
         locationStackView.addArrangedSubview(locationIcon)
         locationStackView.addArrangedSubview(locationLabel)
+        
+        navigationTrackView.addSubview(navigationView)
         
         NSLayoutConstraint.activate([
             // Pinned cleanly to topLayoutGuide spacing
@@ -210,7 +248,19 @@ class ViewController: UIViewController {
             locationStackView.topAnchor.constraint(equalTo: statsStackView.bottomAnchor, constant: 12),
             locationStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             locationIcon.widthAnchor.constraint(equalToConstant: 16),
-            locationIcon.heightAnchor.constraint(equalToConstant: 16)
+            locationIcon.heightAnchor.constraint(equalToConstant: 16),
+            
+            navigationTrackView.topAnchor.constraint(equalTo: locationStackView.bottomAnchor, constant: 24),
+            navigationTrackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            navigationTrackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            navigationTrackView.heightAnchor.constraint(equalToConstant: 44),
+            
+            navigationView.topAnchor.constraint(equalTo: navigationTrackView.topAnchor, constant: 4),
+            navigationView.leadingAnchor.constraint(equalTo: navigationTrackView.leadingAnchor, constant: 4),
+            navigationView.trailingAnchor.constraint(equalTo: navigationTrackView.trailingAnchor, constant: -4),
+            navigationView.bottomAnchor.constraint(equalTo: navigationTrackView.bottomAnchor, constant: -4),
+            
+            contentView.bottomAnchor.constraint(equalTo: navigationView.bottomAnchor, constant: 20),
         ])
     }
     
