@@ -198,6 +198,14 @@ class ViewController: UIViewController {
         return view
     }()
     
+    private let tabsContentView: UIStackView = {
+        let view = UIStackView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.axis = .vertical
+        view.spacing = 16
+        return view
+    }()
+    
     private func setupProfileHeader() {
         contentView.addSubview(profileImageView)
         contentView.addSubview(textStackView)
@@ -207,6 +215,7 @@ class ViewController: UIViewController {
         contentView.addSubview(locationStackView)
         contentView.addSubview(navigationView)
         contentView.addSubview(navigationTrackView)
+        contentView.addSubview(tabsContentView)
         
         textStackView.addArrangedSubview(nameLabel)
         textStackView.addArrangedSubview(usernameLabel)
@@ -260,7 +269,11 @@ class ViewController: UIViewController {
             navigationView.trailingAnchor.constraint(equalTo: navigationTrackView.trailingAnchor, constant: -4),
             navigationView.bottomAnchor.constraint(equalTo: navigationTrackView.bottomAnchor, constant: -4),
             
-            contentView.bottomAnchor.constraint(equalTo: navigationView.bottomAnchor, constant: 20),
+            contentView.bottomAnchor.constraint(equalTo: tabsContentView.bottomAnchor, constant: 20),
+            
+            tabsContentView.topAnchor.constraint(equalTo: navigationTrackView.bottomAnchor, constant: 20),
+            tabsContentView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            tabsContentView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
         ])
     }
     
@@ -286,6 +299,11 @@ class ViewController: UIViewController {
     }
     
     @objc private func navigationTabChanged(_ sender: UISegmentedControl) {
+        tabsContentView.arrangedSubviews.forEach {
+            tabsContentView.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        
         switch sender.selectedSegmentIndex {
         case 0:
             print("overview selected")
