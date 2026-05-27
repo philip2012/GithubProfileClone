@@ -285,6 +285,19 @@ class ViewController: UIViewController {
         ])
     }
     
+    @objc private func navigationTabChanged(_ sender: UISegmentedControl) {
+        switch sender.selectedSegmentIndex {
+        case 0:
+            print("overview selected")
+        case 1:
+            print("repositories selected")
+        case 2:
+            print("starred selected")
+        default:
+            break
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(white: 0.05, alpha: 1)
@@ -310,6 +323,8 @@ class ViewController: UIViewController {
         
         setupScrollConstraints()
         setupProfileHeader()
+        
+        navigationView.addTarget(self, action: #selector(navigationTabChanged(_:)), for: .valueChanged)
     }
     
     override func viewDidLayoutSubviews() {
