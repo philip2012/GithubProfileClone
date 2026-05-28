@@ -4,22 +4,27 @@ class ViewController: UIViewController {
     private let gradientLayer: CAGradientLayer = CAGradientLayer()
     private let noiseLayer: CALayer = CALayer()
     
-    private func generateNoiseImage() -> UIImage? {
-        let size = CGSize(width: 128, height: 128)
-        UIGraphicsBeginImageContext(size)
-        guard let context = UIGraphicsGetCurrentContext() else { return nil }
-        
-        for x in 0..<Int(size.width) {
-            for y in 0..<Int(size.height) {
-                let gray = CGFloat.random(in: 0...1)
-                context.setFillColor(UIColor(white: gray, alpha: 0.1).cgColor)
-                context.fill(CGRect(x: x, y: y, width: 1, height: 1))
+    private func generateNoiseImage(completion: @escaping (UIImage?) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let size = CGSize(width: 128, height: 128)
+
+            let renderer = UIGraphicsImageRenderer(size: size)
+            let image = renderer.image { context in
+                let cgContext = context.cgContext
+
+                for x in 0..<Int(size.width) {
+                    for y in 0..<Int(size.height) {
+                        let gray = CGFloat.random(in: 0...1)
+                        cgContext.setFillColor(UIColor(white: gray, alpha: 0.1).cgColor)
+                        cgContext.fill(CGRect(x: x, y: y, width: 1, height: 1))
+                    }
+                }
+            }
+
+            DispatchQueue.main.async {
+                completion(image)
             }
         }
-        
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return image
     }
     
     @IBOutlet weak var scrollView: UIScrollView!
@@ -68,7 +73,6 @@ class ViewController: UIViewController {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         
-        // Modern UIButton Configuration (Bypasses deprecated contentEdgeInsets)
         var config = UIButton.Configuration.filled()
         config.title = "Follow"
         config.baseForegroundColor = .white
@@ -78,7 +82,7 @@ class ViewController: UIViewController {
         
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         button.layer.borderWidth = 1.0
-        button.layer.borderColor = UIColor(white: 1.0, alpha: 0.2).cgColor // Subtly blended border
+        button.layer.borderColor = UIColor(white: 1.0, alpha: 0.2).cgColor
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
         return button
@@ -164,8 +168,6 @@ class ViewController: UIViewController {
         return stack
     }()
     
-    private let titleArray: Array = ["Overview", "Repositories", "Starred"]
-    
     private let navigationView: UISegmentedControl = {
         let view = UISegmentedControl(items: ["Overview", "Repositories", "Starred"])
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -206,51 +208,47 @@ class ViewController: UIViewController {
         return view
     }()
     
-    private func setupMockRepoCard(_ title: String, _ color: UIColor) -> UIView {
+    private func setupMockRepoCard(for repo: Repository, cardColor: UIColor) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = color
+        card.backgroundColor = cardColor
         card.layer.cornerRadius = 12
         card.clipsToBounds = true
         
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = title
+        titleLabel.text = repo.name
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         titleLabel.textColor = .white
             
         let subtitleLabel = UILabel()
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        subtitleLabel.text = "An elegant layout framework built entirely via programmatic UI rules."
+        subtitleLabel.text = repo.description
         subtitleLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         subtitleLabel.textColor = UIColor(white: 0.7, alpha: 1)
         subtitleLabel.numberOfLines = 2
             
         let techIndicator = UILabel()
         techIndicator.translatesAutoresizingMaskIntoConstraints = false
-        techIndicator.text = "● Swift"
+        techIndicator.text = "● \(repo.language)"
         techIndicator.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        techIndicator.textColor = UIColor.systemBlue
+        techIndicator.textColor = repo.languageColor
         
         card.addSubview(titleLabel)
         card.addSubview(subtitleLabel)
         card.addSubview(techIndicator)
         
         NSLayoutConstraint.activate([
-            // Constrain Title to top left
             titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
             titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
                 
-            // Stack Description below Title
             subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
             subtitleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
             subtitleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
             
-            // This completes the vertical chain so the card knows how tall it needs to be.
             techIndicator.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 14),
                 
-            // Anchor Language Indicator to bottom left edge
             techIndicator.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
             techIndicator.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
         ])
@@ -258,22 +256,40 @@ class ViewController: UIViewController {
         return card
     }
     
-    private func renderOverview() {
-        let overviewCard = setupMockRepoCard("Pinned Profile README", UIColor(white: 1, alpha: 0.05))
-        tabsContentView.addArrangedSubview(overviewCard)
+    struct Repository {
+        let name: String
+        let description: String
+        let language: String
+        let languageColor: UIColor
     }
     
-    private func renderRepositories() {
-        for i in 1...3 {
-            let repoCard = setupMockRepoCard("Repo Module \(i)", UIColor(white: 1.0, alpha: 0.03))
-            tabsContentView.addArrangedSubview(repoCard)
+    let mockRepositories = [
+        Repository(name: "FlyKit", description: "High-performance flight dynamics engine for JSBSim configurations.", language: "Swift", languageColor: .systemBlue),
+        Repository(name: "MetalGrain", description: "Custom MSL shaders for rendering premium procedural noise overlays.", language: "Metal", languageColor: .systemPurple),
+        Repository(name: "LuauBridge", description: "Lightweight script bindings and automatic type generation utility.", language: "C++", languageColor: .systemOrange)
+    ]
+    
+    private func renderOverview() {
+        if let firstRepo = mockRepositories.first {
+            let overviewCard = setupMockRepoCard(for: firstRepo, cardColor: UIColor(white: 1, alpha: 0.05))
+            tabsContentView.addArrangedSubview(overviewCard)
         }
     }
     
-    private func renderStarred() {
-        let starredCard = setupMockRepoCard("Starred Frameworks", UIColor(white: 1, alpha: 0.04))
-        tabsContentView.addArrangedSubview(starredCard)
+    private func renderRepositories() {
+        mockRepositories.forEach {
+            let repoCard = setupMockRepoCard(for: $0, cardColor: UIColor(white: 1.0, alpha: 0.03))
+            tabsContentView.addArrangedSubview(repoCard)
+        }
     }
+
+    private func renderStarred() {
+        if mockRepositories.count > 1 {
+            let starredCard = setupMockRepoCard(for: mockRepositories[1], cardColor: UIColor(white: 1, alpha: 0.04))
+            tabsContentView.addArrangedSubview(starredCard)
+        }
+    }
+    
     private func setupProfileHeader() {
         contentView.addSubview(profileImageView)
         contentView.addSubview(textStackView)
@@ -281,7 +297,6 @@ class ViewController: UIViewController {
         contentView.addSubview(bioLabel)
         contentView.addSubview(statsStackView)
         contentView.addSubview(locationStackView)
-        contentView.addSubview(navigationView)
         contentView.addSubview(navigationTrackView)
         contentView.addSubview(tabsContentView)
         
@@ -298,7 +313,6 @@ class ViewController: UIViewController {
         navigationTrackView.addSubview(navigationView)
         
         NSLayoutConstraint.activate([
-            // Pinned cleanly to topLayoutGuide spacing
             profileImageView.widthAnchor.constraint(equalToConstant: 80),
             profileImageView.heightAnchor.constraint(equalToConstant: 80),
             profileImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
@@ -311,17 +325,17 @@ class ViewController: UIViewController {
             followButton.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 20),
             followButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             followButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            followButton.heightAnchor.constraint(equalToConstant: 40), // Hard-locked standard height
+            followButton.heightAnchor.constraint(equalToConstant: 40),
             
             bioLabel.topAnchor.constraint(equalTo: followButton.bottomAnchor, constant: 20),
             bioLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             bioLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            
             statsStackView.topAnchor.constraint(equalTo: bioLabel.bottomAnchor, constant: 16),
             statsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             followersIcon.widthAnchor.constraint(equalToConstant: 16),
             followersIcon.heightAnchor.constraint(equalToConstant: 16),
                     
-                    // Location Row Constraints
             locationStackView.topAnchor.constraint(equalTo: statsStackView.bottomAnchor, constant: 12),
             locationStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             locationIcon.widthAnchor.constraint(equalToConstant: 16),
@@ -350,13 +364,11 @@ class ViewController: UIViewController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            // FIXED: Scroll view bleeds edge-to-edge beautifully
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
-            // Content view aligns along the safe frame guides internally
             contentView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
@@ -367,24 +379,28 @@ class ViewController: UIViewController {
     }
     
     @objc private func navigationTabChanged(_ sender: UISegmentedControl) {
-        tabsContentView.arrangedSubviews.forEach {
-            tabsContentView.removeArrangedSubview($0)
-            $0.removeFromSuperview()
-        }
-        
-        switch sender.selectedSegmentIndex {
-        case 0:
-            print("overview selected")
-            renderOverview()
-        case 1:
-            print("repositories selected")
-            renderRepositories()
-        case 2:
-            print("starred selected")
-            renderStarred()
-        default:
-            break
-        }
+        UIView.transition(with: self.tabsContentView, duration: 0.2, options: [
+            .transitionCrossDissolve,
+            .curveEaseInOut
+        ], animations: { [weak self] in
+            guard let self = self else { return }
+            
+            self.tabsContentView.arrangedSubviews.forEach {
+                self.tabsContentView.removeArrangedSubview($0)
+                $0.removeFromSuperview()
+            }
+            
+            switch sender.selectedSegmentIndex {
+            case 0:
+                self.renderOverview()
+            case 1:
+                self.renderRepositories()
+            case 2:
+                self.renderStarred()
+            default:
+                break
+            }
+        }, completion: nil)
     }
     
     override func viewDidLoad() {
@@ -400,9 +416,17 @@ class ViewController: UIViewController {
         gradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
         
         noiseLayer.opacity = 0.03
-        if let noiseImage = generateNoiseImage() {
-            noiseLayer.backgroundColor = UIColor(patternImage: noiseImage).cgColor
+        
+        generateNoiseImage { [weak self] noiseImage in
+            guard let self = self, let image = noiseImage else {
+                return
+            }
+
+            self.noiseLayer.contents = image.cgImage
+            self.noiseLayer.contentsGravity = .resize
         }
+        
+        scrollView.contentInsetAdjustmentBehavior = .never
         
         view.layer.insertSublayer(gradientLayer, at: 0)
         view.layer.insertSublayer(noiseLayer, above: gradientLayer)
@@ -415,14 +439,39 @@ class ViewController: UIViewController {
         
         navigationView.addTarget(self, action: #selector(navigationTabChanged(_:)), for: .valueChanged)
         renderOverview()
+        
+        scrollView.delegate = self
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
         gradientLayer.frame = view.bounds
         noiseLayer.frame = view.bounds
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+
+        scrollView.contentInset = UIEdgeInsets(
+            top: view.safeAreaInsets.top,
+            left: 0,
+            bottom: view.safeAreaInsets.bottom,
+            right: 0
+        )
+    }
+}
+
+extension ViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
         
-        // Pushes content offset down so things don't slide under the status bar initially
-        scrollView.contentInset = UIEdgeInsets(top: view.safeAreaInsets.top, left: 0, bottom: view.safeAreaInsets.bottom, right: 0)
+        let fadeRange: CGFloat = 150
+        let alpha = max(0.0, min(1.0, 1.0 - (offsetY / fadeRange)))
+                
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        gradientLayer.opacity = Float(alpha)
+        CATransaction.commit()
     }
 }
