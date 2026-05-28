@@ -146,7 +146,7 @@ class ViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
-
+    
     private let locationLabel: UILabel = {
         let label = UILabel()
         label.text = "Ho Chi Minh City, Vietnam"
@@ -154,7 +154,7 @@ class ViewController: UIViewController {
         label.textColor = UIColor(white: 0.8, alpha: 1)
         return label
     }()
-
+    
     private let locationStackView: UIStackView = {
         let stack = UIStackView()
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -206,6 +206,74 @@ class ViewController: UIViewController {
         return view
     }()
     
+    private func setupMockRepoCard(_ title: String, _ color: UIColor) -> UIView {
+        let card = UIView()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.backgroundColor = color
+        card.layer.cornerRadius = 12
+        card.clipsToBounds = true
+        
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        titleLabel.textColor = .white
+            
+        let subtitleLabel = UILabel()
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        subtitleLabel.text = "An elegant layout framework built entirely via programmatic UI rules."
+        subtitleLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        subtitleLabel.textColor = UIColor(white: 0.7, alpha: 1)
+        subtitleLabel.numberOfLines = 2
+            
+        let techIndicator = UILabel()
+        techIndicator.translatesAutoresizingMaskIntoConstraints = false
+        techIndicator.text = "● Swift"
+        techIndicator.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        techIndicator.textColor = UIColor.systemBlue
+        
+        card.addSubview(titleLabel)
+        card.addSubview(subtitleLabel)
+        card.addSubview(techIndicator)
+        
+        NSLayoutConstraint.activate([
+            // Constrain Title to top left
+            titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+                
+            // Stack Description below Title
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
+            subtitleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            subtitleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            
+            // This completes the vertical chain so the card knows how tall it needs to be.
+            techIndicator.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 14),
+                
+            // Anchor Language Indicator to bottom left edge
+            techIndicator.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+            techIndicator.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+        ])
+        
+        return card
+    }
+    
+    private func renderOverview() {
+        let overviewCard = setupMockRepoCard("Pinned Profile README", UIColor(white: 1, alpha: 0.05))
+        tabsContentView.addArrangedSubview(overviewCard)
+    }
+    
+    private func renderRepositories() {
+        for i in 1...3 {
+            let repoCard = setupMockRepoCard("Repo Module \(i)", UIColor(white: 1.0, alpha: 0.03))
+            tabsContentView.addArrangedSubview(repoCard)
+        }
+    }
+    
+    private func renderStarred() {
+        let starredCard = setupMockRepoCard("Starred Frameworks", UIColor(white: 1, alpha: 0.04))
+        tabsContentView.addArrangedSubview(starredCard)
+    }
     private func setupProfileHeader() {
         contentView.addSubview(profileImageView)
         contentView.addSubview(textStackView)
@@ -307,10 +375,13 @@ class ViewController: UIViewController {
         switch sender.selectedSegmentIndex {
         case 0:
             print("overview selected")
+            renderOverview()
         case 1:
             print("repositories selected")
+            renderRepositories()
         case 2:
             print("starred selected")
+            renderStarred()
         default:
             break
         }
@@ -343,6 +414,7 @@ class ViewController: UIViewController {
         setupProfileHeader()
         
         navigationView.addTarget(self, action: #selector(navigationTabChanged(_:)), for: .valueChanged)
+        renderOverview()
     }
     
     override func viewDidLayoutSubviews() {
